@@ -56,7 +56,7 @@ Example:
     TOMCAT_REMOTE_PORT=8080
     TOMCAT_REMOTE_PATH=/javaapp
 
-Generates (/etc/nginx/sites-enabled/proxy.conf):
+Generates (/etc/nginx/conf.d/proxy.conf):
 
     upstream webapp {
         ip_hash;

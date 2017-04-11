@@ -37,7 +37,7 @@ Example:
     WWW_EXAMPLE_COM_SSL_CERTIFICATE=something.pem
     WWW_EXAMPLE_COM_SSL_CERTIFICATE_KEY=something.key
 
-Generates (/etc/nginx/sites-enabled/proxy.conf):
+Generates (/etc/nginx/conf.d/proxy.conf):
 
     upstream webapp {
         ip_hash;
@@ -131,7 +131,7 @@ parser.add_argument(
     '--output-file',
     action='store',
     help='Location where the generated Nginx config file will be placed.',
-    default='/etc/nginx/sites-enabled/proxy.conf'
+    default='/etc/nginx/conf.d/proxy.conf'
     )
 
 def build_conf(hosts, services):

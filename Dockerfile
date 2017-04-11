@@ -1,16 +1,17 @@
-FROM ubuntu:14.04
-MAINTAINER Jason Feinstein <jason.feinstein@gmail.com>
+FROM nginx:mainline
+MAINTAINER Department of the Environment <devops@ris.environment.gov.au>
 
-RUN apt-get update
-RUN apt-get install -y nginx python python-dev python-pip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python \
+    python-dev \
+    python-pip
 
 RUN pip install Jinja2
 
-RUN rm /etc/nginx/sites-enabled/default
+RUN rm /etc/nginx/conf.d/*
 ADD html/ /usr/share/nginx/html/
-ADD sites-enabled/ /etc/nginx/sites-enabled/
 ADD ssl/ /etc/nginx/ssl/
-ADD nginx.conf /etc/nginx/
 
 ADD scripts/ /scripts/
 
