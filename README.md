@@ -2,12 +2,31 @@
 
 This image will auto-generate its own config file for a load-balancer.
 
-It looks for environment variables in the following formats:
+## Usage
+### Default Mode
+In this mode, an upstream group will be created using the specified IP addresses.
+
+It looks for environment variables in the following formats.
+You must specify at least these environment variables for each service.
 
     <service-name>_<service-instance-id>_PORT_80_TCP_ADDR=x.x.x.x
     <service-name>_PATH=<some path>
 
-Optional/Conditional environment variables:
+### Swarm Mode
+This mode is designed for use with Docker Swarm Mode, which includes service discovery with DNS resolution.
+
+To use Swarm Mode, set the environment variable `SWARM_MODE` to any value.
+
+It looks for environment variables in the following formats.
+You must specify at least these environment variables for each service.
+
+    <service-name>_SERVICE_PORT_<port_number>=<service-discovery-name>
+    <service-name>_PATH=<path>
+
+service-discovery-name is the hostname that your service discovery system will advertise the service as. In Docker Swarm Mode, this is the name of the Service.
+
+## Optional/Conditional environment variables
+These environment variables may be specified to provide additional configuration.
 
     <service-name>_REMOTE_PORT=<remoteport> (optional - default: 80)
     <service-name>_REMOTE_PATH=<remotepath> (optional - default: /)
@@ -25,7 +44,7 @@ Optional/Conditional environment variables:
 
 And will build an nginx config file.
 
-Example:
+## Example
 
     # automatically created environment variables (docker links)
     WEBAPP_1_PORT_80_TCP_ADDR=192.168.0.2

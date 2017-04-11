@@ -134,9 +134,9 @@ parser.add_argument(
     default='/etc/nginx/conf.d/proxy.conf'
     )
 
-def build_conf(hosts, services):
+def build_conf(swarm_mode, dns_servers, hosts, services):
     template = env.get_template('proxy.conf.j2')
-    return template.render(hosts=hosts, services=services)
+    return template.render(swarm_mode=swarm_mode, dns_servers=dns_servers, hosts=hosts, services=services)
 
 def parse_env(env=os.environ):
     prefix = env.get('ENV_PREFIX')
@@ -147,7 +147,13 @@ def parse_env(env=os.environ):
         prefix = ''
         print 'No fig prefix found.'
 
-    link_pattern = re.compile(r'^%s(?P<service_name>[a-zA-Z_]+)(_[\d]+)?_PORT_(?P<service_port>[\d]+)_TCP_ADDR$' % (prefix))
+    swarm_mode = bool(os.environ.get('SWARM_MODE'))
+
+    if(swarm_mode):
+        print 'Running in Swarm Mode.'
+        link_pattern = re.compile(r'^%s(?P<service_name>[a-zA-Z_]+)_SERVICE_PORT_(?P<service_port>[\d]+)$' % (prefix))
+    else:
+        link_pattern = re.compile(r'^%s(?P<service_name>[a-zA-Z_]+)(_[\d]+)?_PORT_(?P<service_port>[\d]+)_TCP_ADDR$' % (prefix))
 
     services = {}
     hosts = {}
@@ -234,15 +240,29 @@ def parse_env(env=os.environ):
             value['ssl_ciphers'] = ssl_ciphers
             value['ssl_protocols'] = ssl_protocols
 
-    return hosts, services
+    return swarm_mode, hosts, services
 
 def format_hostname(hostname):
     return hostname.replace('.', '_').upper()
 
+def get_dns_servers():
+    '''
+    Return a space-separated list of DNS servers from /etc/resolv.conf
+    '''
+    dns_servers = []
+
+    with open('/etc/resolv.conf', 'r') as f:
+        for line in f:
+            if 'nameserver' in line:
+                dns_servers.append(line.split(' ')[1].rstrip())
+
+    assert len(dns_servers) >= 1, 'Error reading nameservers from /etc/resolv.conf'
+    return ' '.join(dns_servers)
+
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    hosts, services = parse_env()
+    swarm_mode, hosts, services = parse_env()
     if args.test == 'parse':
         print "Services:"
         print "%s\n" % json.dumps(services, sort_keys=True, indent=4, separators=(',', ': '))
@@ -250,7 +270,7 @@ if __name__ == "__main__":
         print "%s" % json.dumps(hosts, sort_keys=True, indent=4, separators=(',', ': '))
         exit(0)
 
-    conf_contents = build_conf(hosts, services)
+    conf_contents = build_conf(swarm_mode, get_dns_servers(), hosts, services)
     sys.stdout.flush()
     if args.test == 'conf':
         print "Contents of proxy.conf:%s" % conf_contents.replace('\n', '\n    ')
