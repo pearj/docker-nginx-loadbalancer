@@ -135,7 +135,7 @@ parser.add_argument(
     )
 
 def build_conf(hosts, services):
-    template = env.get_template('proxy.conf')
+    template = env.get_template('proxy.conf.j2')
     return template.render(hosts=hosts, services=services)
 
 def parse_env(env=os.environ):
