@@ -1,11 +1,10 @@
-FROM nginx:mainline
+FROM nginx:alpine
 MAINTAINER Department of the Environment <devops@ris.environment.gov.au>
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apk update && \
+    apk add \
     python \
-    python-dev \
-    python-pip
+    py-pip
 
 RUN pip install Jinja2
 
