@@ -34,6 +34,9 @@ server {
     {%- endif %}
 
     root /usr/share/nginx/html;
+    proxy_read_timeout 5m;
+    proxy_send_timeout 5m;
+    client_max_body_size 20m;
     {%- for service_name in host['services'] %}
 
     # For service: {{ service_name }}
@@ -84,6 +87,9 @@ server {
     {%- endif %}
 
     root /usr/share/nginx/html;
+    proxy_read_timeout 5m;
+    proxy_send_timeout 5m;
+    client_max_body_size 20m;
 
     ssl on;
     ssl_certificate {{ host['ssl_certificate'] }};
