@@ -1,7 +1,4 @@
-{%- if swarm_mode %}
-resolver {{ dns_servers }} valid=5m;
-
-{%- else %}
+{%- if not swarm_mode %}
 {%- for service_name, service in services.iteritems() %}
 upstream {{ service_name|lower }} {
     {%- if service.balancing_type %}
@@ -17,12 +14,16 @@ upstream {{ service_name|lower }} {
 server {
     listen 80 default_server;
     server_name _;
+    ignore_invalid_headers off;
     return 404;
 }
 
 {%- for hostname, host in hosts.iteritems() %}
 {%- if host['protocols']['http'] %}
 server {
+{%- if swarm_mode %}
+    resolver {{ dns_servers }} valid=30s;
+{%- endif %}
     listen 80;
     server_name {{ hostname }};
 
@@ -45,8 +46,10 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         {%- if swarm_mode %}
         proxy_pass http://{{ services[service_name]['addresses'][0] }}:{{ services[service_name]['port'] }}{{ services[service_name]['remote_path'] }};
+        proxy_redirect http://{{ services[service_name]['addresses'][0] }}:{{ services[service_name]['port'] }}{{ services[service_name]['remote_path'] }} $scheme://{{ hostname }}{{ services[service_name]['remote_path'] }};
         {%- else %}
         proxy_pass http://{{service_name|lower}}{{services[service_name]['remote_path']}};
+        proxy_redirect http://{{service_name|lower}}{{services[service_name]['remote_path']}}  $scheme://{{ hostname }}{{ services[service_name]['remote_path'] }};
         {%- endif %}
         proxy_http_version 1.1;
         proxy_set_header Connection "";
@@ -55,6 +58,9 @@ server {
 }
 {%- else %}
 server {
+{%- if swarm_mode %}
+    resolver {{ dns_servers }} valid=30s;
+{%- endif %}
     listen 80;
     server_name {{ hostname }};
 
@@ -76,6 +82,9 @@ server {
 {%- endif %}
 {%- if host['protocols']['https'] %}
 server {
+{%- if swarm_mode %}
+    resolver {{ dns_servers }} valid=30s;
+{%- endif %}
     listen 443;
     server_name {{ hostname }};
 
@@ -111,8 +120,10 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         {%- if swarm_mode %}
         proxy_pass http://{{ services[service_name]['addresses'][0] }}:{{ services[service_name]['port'] }}{{ services[service_name]['remote_path'] }};
+        proxy_redirect http://{{ services[service_name]['addresses'][0] }}:{{ services[service_name]['port'] }}{{ services[service_name]['remote_path'] }} $scheme://{{ hostname }}{{ services[service_name]['remote_path'] }};
         {%- else %}
         proxy_pass http://{{service_name|lower}}{{services[service_name]['remote_path']}};
+        proxy_redirect http://{{service_name|lower}}{{services[service_name]['remote_path']}}  $scheme://{{ hostname }}{{ services[service_name]['remote_path'] }};
         {%- endif %}
         proxy_http_version 1.1;
         proxy_set_header Connection "";
